@@ -2,13 +2,14 @@ import { CreateReplyModel, CreateThreadModel, ThreadModel, ReplyModel, GetThread
 import { getThreadCollection, getDb, getReplyCollection, getImageCollection } from "../utils/db";
 import { getCurrentId } from "../utils/currentId";
 import { HTTPError, MapToHTTPError } from "../utils/error";
+import { removeHangingImages } from "../utils/images";
 
 export const createThread = async (t: CreateThreadModel, userId: string): Promise<string> => {
     try {
         const imageCollection = await getImageCollection();
         let imageUrl = "";
         if (t.imageId) {
-            const image = await imageCollection.findOne({ id: t.imageId });
+            const image = await imageCollection.findOne({ id: t.imageId, associatedElement: "" });
             if (!image) {
                 throw HTTPError(404, "Image not found");
             }
@@ -83,7 +84,8 @@ const createGetRepliesModel = (reply: ReplyModel, userId?: string): GetReplyMode
         timestamp: reply.timestamp,
         userIsAuthor: userId !== undefined && userId === reply.userId,
         taggedElementIds: reply.taggedElementIds,
-        taggedByElementIds: reply.taggedByElementIds
+        taggedByElementIds: reply.taggedByElementIds,
+        imageUrl: reply.imageUrl
     }
     return response;
 }
@@ -101,25 +103,40 @@ export const getThread = async (id: string, userId?: string): Promise<GetThreadM
     return createGetThreadModel(thread, replies, userId);
 }
 
-export const createReply = async (threadId: string, r: CreateReplyModel, userId: string, imageUrl?: string): Promise<string> => {
-    const currentId = await getCurrentId();
-    await getThread(threadId); // check if thread exists, method throws error if it doesn't
-    const collection = await getReplyCollection();
-    const timestamp = Date.now();
-    const reply: ReplyModel = {
-        ...r,
-        userId: userId,
-        imageUrl,
-        threadId,
-        id: currentId,
-        timestamp,
-        taggedByElementIds: [],
-        taggedElementIds: r.taggedElementIds ?? []
+export const createReply = async (threadId: string, r: CreateReplyModel, userId: string): Promise<string> => {
+    try {
+        const imageCollection = await getImageCollection();
+        let imageUrl = "";
+        if (r.imageId) {
+            const image = await imageCollection.findOne({ id: r.imageId, associatedElement: "" });
+            if (!image) {
+                throw HTTPError(404, "Image not found");
+            }
+            imageUrl = image.url;
+        }
+        await getThread(threadId); // check if thread exists, method throws error if it doesn't
+        const currentId = await getCurrentId();
+        const collection = await getReplyCollection();
+        const timestamp = Date.now();
+        const reply: ReplyModel = {
+            ...r,
+            userId: userId,
+            imageUrl,
+            threadId,
+            id: currentId,
+            timestamp,
+            taggedByElementIds: [],
+            taggedElementIds: r.taggedElementIds ?? []
+        }
+        await (await getThreadCollection()).updateOne({ id: threadId }, { $set: { lastInteraction: timestamp } });
+        await imageCollection.updateOne({ id: r.imageId }, { $set: { associatedElement: reply.id } });
+        await collection.insertOne(reply);
+        await addTaggedElementId(reply.id, reply.taggedElementIds);
+        return reply.id;
+    } catch (e) {
+        console.log(e);
+        throw MapToHTTPError(e);
     }
-    await (await getThreadCollection()).updateOne({ id: threadId }, { $set: { lastInteraction: timestamp } });
-    await collection.insertOne(reply);
-    await addTaggedElementId(reply.id, reply.taggedElementIds);
-    return reply.id;
 }
 
 
@@ -129,11 +146,17 @@ export const removeOldThreads = async () => {
     console.log("Removing threads older than", new Date(timestamp));
     const collection = await getThreadCollection();
     const replyCollection = await getReplyCollection();
+    let deletedIds: string[] = []
     const threads = await collection.find({ timestamp: { $lt: timestamp } }).toArray();
+    deletedIds.push(...threads.map(t => t.id));
     for (let thread of threads) {
+        deletedIds.push(...await replyCollection.find({ threadId: thread.id }).toArray().then(replies => replies.map(r => r.id)));
         await replyCollection.deleteMany({ threadId: thread.id });
     }
     await collection.deleteMany({ timestamp: { $lt: timestamp } });
+    const imageCollection = await getImageCollection();
+    const images = await imageCollection.updateMany({ associatedElement: { $in: deletedIds } }, { $set: { associatedElement: "" } });
+    removeHangingImages();
 }
 
 

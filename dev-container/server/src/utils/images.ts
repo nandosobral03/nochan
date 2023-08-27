@@ -14,7 +14,7 @@ export const saveImage = async (file: Blob, id: string) => {
     console.log(fileType);
     if (!fileType) throw HTTPError(400, "Invalid file type");
     fs.mkdirSync(path.join(process.cwd(), "images"), { recursive: true });
-    writeFileSync(path.join(process.cwd(), `images/${id}.${fileType.ext}`), file.toString());
+    writeFileSync(path.join(process.cwd(), `images/${id}.${fileType.ext}`), Buffer.from(await file.arrayBuffer()));
     await collection.insertOne({ id, timestamp: Date.now(), path: `./images/${id}.${fileType.ext}`, associatedElement: "", url: `${process.env.SERVER_URL}/images/${id}.${fileType.ext}` });
     return id;
 }
@@ -34,3 +34,4 @@ export const removeHangingImages = async () => {
     }
     collection.deleteMany({ timestamp: { $lt: timestamp }, associatedElement: "" });
 }
+

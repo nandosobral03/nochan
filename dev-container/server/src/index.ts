@@ -5,6 +5,7 @@ import threadRoutes from "./routes/threads.routes";
 import { removeOldThreads } from "./services/threads.service";
 import { removeHangingImages } from "./utils/images";
 import { uploadImageToServer } from "./controllers/threads.controller";
+import path from "path";
 
 
 const app = new Elysia()
@@ -13,6 +14,10 @@ app.post('/images', ({ body: { file } }) => uploadImageToServer(file), {
   body: t.Object({
     file: t.File()
   })
+})
+app.get("/images/:id", ({ params: { id } }) => {
+  console.log(path.join(process.cwd(), "images", id))
+  return Bun.file(path.join(process.cwd(), "images", id))
 })
 app.group("/threads", app => app.use(threadRoutes))
 app.listen(3000)
