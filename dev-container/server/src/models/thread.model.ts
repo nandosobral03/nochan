@@ -4,17 +4,14 @@ import { Static } from '@sinclair/typebox'
 export const CreateThreadModelDTO = t.Object({
     title: t.String(),
     content: t.String(),
-    userId: t.String(),
-    imageUrl: t.Optional(t.String()),
     taggedElementIds: t.Optional(t.Array(t.String())),
+    imageId: t.Optional(t.String()),
 })
 export type CreateThreadModel = Static<typeof CreateThreadModelDTO>
 
 export const CreateReplyModelDTO = t.Object({
-    threadId: t.String(),
     content: t.String(),
-    userId: t.String(),
-    imageUrl: t.Optional(t.String()),
+    imageId: t.Optional(t.String()),
     taggedElementIds: t.Optional(t.Array(t.String())),
 })
 export type CreateReplyModel = Static<typeof CreateReplyModelDTO>
@@ -23,25 +20,25 @@ export type CreateReplyModel = Static<typeof CreateReplyModelDTO>
 
 // Get
 export type GetThreadModel = {
-    threadId: string
+    id: string
     content: string
     title: string
-    imageUrl: string | null
-    timestamp: Date
-    lastInteraction: Date
+    imageUrl?: string
+    timestamp: number
+    lastInteraction: number
     userIsAuthor: boolean
-    comment: GetReplyModel[],
-    taggedElementIds: string[],
+    replies: GetReplyModel[]
+    taggedElementIds: string[]
     taggedByElementIds: string[]
 }
 
 export type GetReplyModel = {
-    replyId: string
+    id: string
     content: string
-    imageUrl: string | null
-    timestamp: Date
-    userIsAuthor: boolean,
-    taggedElementIds: string[],
+    imageUrl?: string
+    timestamp: number
+    userIsAuthor: boolean
+    taggedElementIds: string[]
     taggedByElementIds: string[]
 }
 
@@ -54,7 +51,6 @@ export type ThreadModel = {
     content: string,
     userId: string,
     imageUrl?: string,
-    replies: ReplyModel[],
     timestamp: number,
     lastInteraction: number,
     taggedElementIds: string[],
@@ -64,6 +60,7 @@ export type ThreadModel = {
 
 export type ReplyModel = {
     id: string,
+    threadId: string,
     content: string,
     userId: string,
     imageUrl?: string,

@@ -1,5 +1,6 @@
 const dotenv = require("dotenv");
-import { Db, MongoClient } from "mongodb";
+import { Collection, Db, MongoClient } from "mongodb";
+import { ReplyModel, ThreadModel } from "../models/thread.model";
 
 
 
@@ -16,4 +17,25 @@ export const getClient = async () => {
 export const getDb = async (): Promise<Db> => {
     const client = await getClient();
     return client.db("nochan");
+}
+
+export const getThreadCollection = async (): Promise<Collection<ThreadModel>> => {
+    const db = await getDb();
+    return db.collection<ThreadModel>("threads");
+}
+
+export const getReplyCollection = async (): Promise<Collection<ReplyModel>> => {
+    const db = await getDb();
+    return db.collection<ReplyModel>("replies");
+}
+
+export const getImageCollection = async (): Promise<Collection<{
+    id: string,
+    path: string,
+    url: string,
+    timestamp: number,
+    associatedElement: string
+}>> => {
+    const db = await getDb();
+    return db.collection("images");
 }
