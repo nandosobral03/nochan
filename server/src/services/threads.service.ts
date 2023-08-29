@@ -2,8 +2,8 @@ import { CreateReplyModel, CreateThreadModel, ThreadModel, ReplyModel, GetThread
 import { getThreadCollection, getDb, getReplyCollection, getImageCollection, getUtilsCollection } from "../utils/db";
 import { getCurrentId } from "../utils/currentId";
 import { HTTPError, MapToHTTPError } from "../utils/error";
-import { removeHangingImages } from "../utils/images";
 import { getCurrentHash } from "./state.service";
+import { SortBy, MySortDirection } from "../routes/threads.routes";
 
 export const createThread = async (t: CreateThreadModel, userId: string): Promise<string> => {
     try {
@@ -27,7 +27,8 @@ export const createThread = async (t: CreateThreadModel, userId: string): Promis
             timestamp,
             lastInteraction: timestamp,
             taggedByElementIds: [],
-            taggedElementIds: t.taggedElementIds ?? []
+            taggedElementIds: t.taggedElementIds ?? [],
+            replyCount: 0
         }
 
         await collection.insertOne(thread);
@@ -72,7 +73,8 @@ const createGetThreadModel = (thread: ThreadModel, replies: ReplyModel[], userId
         userIsAuthor: userId !== undefined && userId === thread.userId,
         replies: replies.map(r => createGetRepliesModel(r, userId)),
         taggedElementIds: thread.taggedElementIds,
-        taggedByElementIds: thread.taggedByElementIds
+        taggedByElementIds: thread.taggedByElementIds,
+        replyCount: thread.replyCount
     }
     return response;
 }
@@ -127,7 +129,7 @@ export const createReply = async (threadId: string, r: CreateReplyModel, userId:
             taggedByElementIds: [],
             taggedElementIds: r.taggedElementIds ?? []
         }
-        await (await getThreadCollection()).updateOne({ id: threadId }, { $set: { lastInteraction: timestamp } });
+        await (await getThreadCollection()).updateOne({ id: threadId }, { $set: { lastInteraction: timestamp }, $inc: { replyCount: 1 } });
         await imageCollection.updateOne({ id: r.imageId }, { $set: { associatedElement: reply.id } });
         await collection.insertOne(reply);
         await addTaggedElementId(reply.id, reply.taggedElementIds);
@@ -139,7 +141,6 @@ export const createReply = async (threadId: string, r: CreateReplyModel, userId:
 }
 
 
-
 export const removeOldThreads = async () => {
     const currentTimestamp = Date.now();
     const timestamp = currentTimestamp - 1000 * 60 * 60 * 24; // 24 hours ago
@@ -147,11 +148,9 @@ export const removeOldThreads = async () => {
     const replyCollection = await getReplyCollection();
     let deletedIds: string[] = []
     const threads = await collection.find({ timestamp: { $lt: timestamp } }).toArray();
-    let highestId = threads.reduce((prev, curr) => parseInt(curr.id) > prev ? parseInt(curr.id) : prev, 0);
     deletedIds.push(...threads.map(t => t.id));
     for (let thread of threads) {
         let replies = await replyCollection.find({ threadId: thread.id }).toArray()
-        highestId = replies.reduce((prev, curr) => parseInt(curr.id) > prev ? parseInt(curr.id) : prev, highestId);
         deletedIds.push(...replies.map(r => r.id));
         await replyCollection.deleteMany({ threadId: thread.id });
     }
@@ -159,12 +158,40 @@ export const removeOldThreads = async () => {
     const imageCollection = await getImageCollection();
     await imageCollection.updateMany({ associatedElement: { $in: deletedIds } }, { $set: { associatedElement: "" } });
     const utils = await getUtilsCollection();
-
-    let current = await utils.findOne({ id: "current" })
     utils.updateOne({ id: "lastUpdated" }, { $set: { value: currentTimestamp.toString() } }, { upsert: true });
     utils.updateOne({ id: "hash" }, { $set: { value: await getCurrentHash(currentTimestamp) } }, { upsert: true })
 }
 
 
+const getThreads = async (page: number, pageSize: number, orderBy: SortBy, order: MySortDirection, userId?: string): Promise<{ threads: GetThreadModel[], total: number }> => {
+    const collection = await getThreadCollection();
+    const replyCollection = await getReplyCollection();
+    let total = await collection.countDocuments();
+    let query = {};
+    let filter = {};
+    switch (orderBy) {
+        case SortBy.timestamp:
+            query = { timestamp: order == MySortDirection.asc ? 1 : -1 };
+            break;
+        case SortBy.lastInteraction:
+            query = { lastInteraction: order == MySortDirection.asc ? 1 : -1 };
+            break;
+        case SortBy.replyCount:
+            query = { replyCount: order == MySortDirection.asc ? 1 : -1 };
+            break;
+    }
+    let threads = await collection.find(filter, { projection: { _id: 0 } }).sort(query).skip(page * pageSize).limit(pageSize).toArray();
+    // Get the first 7 replies for each thread
+    let threadsResponse: GetThreadModel[] = []
+    for (let thread of threads) {
+        let replies = await replyCollection.find({ threadId: thread.id }, { projection: { _id: 0 } }).sort({ timestamp: 1 }).limit(7).toArray();
+        threadsResponse.push(createGetThreadModel(thread, replies, userId));
+    }
+    return {
+        threads: threadsResponse,
+        total
+    };
+}
 
-export default { createThread, getThread, createReply };
+
+export default { createThread, getThread, createReply, getThreads };

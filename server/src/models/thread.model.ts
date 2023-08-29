@@ -30,6 +30,7 @@ export type GetThreadModel = {
     replies: GetReplyModel[]
     taggedElementIds: string[]
     taggedByElementIds: string[]
+    replyCount: number
 }
 
 export type GetReplyModel = {
@@ -55,6 +56,7 @@ export type ThreadModel = {
     lastInteraction: number,
     taggedElementIds: string[],
     taggedByElementIds: string[]
+    replyCount: number
 }
 
 

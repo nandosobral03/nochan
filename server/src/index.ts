@@ -8,7 +8,8 @@ import { removeHangingImages } from "./utils/images";
 import { uploadImageToServer } from "./controllers/threads.controller";
 import path from "path";
 
-
+const dotenv = require('dotenv');
+dotenv.config();
 const app = new Elysia()
 app.use(cors())
 app.post('/images', ({ body: { file } }) => uploadImageToServer(file), {
@@ -21,7 +22,7 @@ app.get("/images/:id", ({ params: { id } }) => {
 })
 app.group("/threads", app => app.use(threadRoutes))
 app.group("/state", app => app.use(stateRoutes))
-app.listen(3000)
+app.listen(process.env.PORT || 3000)
 app.use(cron({
   name: 'cleanup',
   pattern: '* * * * *',

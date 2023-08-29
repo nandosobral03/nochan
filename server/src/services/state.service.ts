@@ -17,10 +17,8 @@ export const getCurrentHash = async (timestamp?: number) => {
     const utils = await getUtilsCollection();
     let elements = await getAllElements(timestamp);
     let lowest = elements[0]?.id
-    let highest = elements[elements.length - 1]?.id
-    if (highest && lowest) {
+    if (lowest) {
         utils.updateOne({ id: "smallestId" }, { $set: { value: (lowest).toString() } }, { upsert: true });
-        utils.updateOne({ id: "highestId" }, { $set: { value: (highest).toString() } }, { upsert: true });
     }
 
     let hasher = new Bun.CryptoHasher("blake2b256")
@@ -37,12 +35,10 @@ export const getAppHash = async () => {
     const utils = await getUtilsCollection();
     let hash = await utils.findOne({ id: "hash" });
     let lowest = await utils.findOne({ id: "smallestId" });
-    let highest = await utils.findOne({ id: "highestId" });
     let lastUpdate = await utils.findOne({ id: "lastUpdated" });
     return {
         hash: hash!.value,
         lowestId: lowest!.value,
-        highestId: highest!.value,
         lastUpdatedHash: lastUpdate!.value
     }
 }

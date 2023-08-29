@@ -2,6 +2,8 @@ import proquint from "proquint";
 import { CreateReplyModel, CreateThreadModel, GetThreadModel } from "../models/thread.model"
 import threadsService from "../services/threads.service"
 import { saveImage } from "../utils/images"
+import { MySortDirection, SortBy } from "../routes/threads.routes";
+import { HTTPError } from "../utils/error";
 
 const generateUserId = (): string => {
     var id: Buffer = Buffer.from(crypto.getRandomValues(new Uint8Array(4)));
@@ -41,4 +43,42 @@ export const getThread = async ({ params, headers }: { params: { threadId: strin
     const userId = headers["user-id"] || undefined;
     const thread = await threadsService.getThread(params.threadId, userId);
     return thread;
+}
+
+export const getThreads = async ({ query, headers }: { query: { page: string, pageSize: string, orderBy: string, order: string }, headers: Record<string, string | null> }): Promise<{ threads: GetThreadModel[], total: number }> => {
+    const userId = headers["user-id"] || undefined;
+    if (!query.page || !query.pageSize || !query.orderBy || !query.order) throw HTTPError(400, "Missing query parameters");
+    if (!["asc", "desc"].includes(query.order)) throw HTTPError(400, "Invalid order parameter, possible values are asc, desc");
+    if (!["timestamp", "replyCount", "lastInteraction"].includes(query.orderBy)) throw HTTPError(400, "Invalid orderBy parameter, possible values are timestamp, replyCount, lastInteraction");
+    let page = 0;
+    let pageSize = 10;
+    try {
+        page = parseInt(query.page);
+    }
+    catch {
+        console.log("Invalid page parameter, defaulting to 0");
+    }
+    try {
+        pageSize = parseInt(query.pageSize);
+    }
+    catch {
+        console.log("Invalid pageSize parameter, defaulting to 10");
+    }
+    let sortBy = SortBy.timestamp;
+    switch (query.orderBy) {
+        case "replyCount":
+            sortBy = SortBy.replyCount;
+            break;
+        case "lastInteraction":
+            sortBy = SortBy.lastInteraction;
+            break;
+        default:
+            sortBy = SortBy.timestamp;
+    }
+
+
+
+
+    const threads = await threadsService.getThreads(page, pageSize, sortBy, query.order == "asc" ? MySortDirection.asc : MySortDirection.desc, userId);
+    return threads;
 }
