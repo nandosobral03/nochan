@@ -39,3 +39,12 @@ export const getImageCollection = async (): Promise<Collection<{
     const db = await getDb();
     return db.collection("images");
 }
+
+export const getUtilsCollection = async (): Promise<Collection<{
+    id: string,
+    value: string
+    timestamp: number
+}>> => {
+    const db = await getDb();
+    return db.collection("utils");
+}

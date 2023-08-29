@@ -19,8 +19,6 @@ export const createThread = async ({ body, headers }: { body: CreateThreadModel,
 }
 
 export const uploadImageToServer = async (file: Blob): Promise<{ imageUrl: string }> => {
-    console.log(file)
-    console.log("uploading image");
     let fileContents = await file.text();
     const hasher = new Bun.CryptoHasher("sha256");
     hasher.update(fileContents);

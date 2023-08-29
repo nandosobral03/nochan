@@ -1,8 +1,9 @@
 import { CreateReplyModel, CreateThreadModel, ThreadModel, ReplyModel, GetThreadModel, GetReplyModel } from "../models/thread.model";
-import { getThreadCollection, getDb, getReplyCollection, getImageCollection } from "../utils/db";
+import { getThreadCollection, getDb, getReplyCollection, getImageCollection, getUtilsCollection } from "../utils/db";
 import { getCurrentId } from "../utils/currentId";
 import { HTTPError, MapToHTTPError } from "../utils/error";
 import { removeHangingImages } from "../utils/images";
+import { getCurrentHash } from "./state.service";
 
 export const createThread = async (t: CreateThreadModel, userId: string): Promise<string> => {
     try {
@@ -94,8 +95,6 @@ export const getThread = async (id: string, userId?: string): Promise<GetThreadM
     const collection = await getThreadCollection();
     const replyCollection = await getReplyCollection();
     let thread = await collection.findOne({ id }, { projection: { _id: 0 } });
-    console.log(thread);
-
     if (!thread) {
         throw HTTPError(404, "Thread not found");
     }
@@ -142,21 +141,28 @@ export const createReply = async (threadId: string, r: CreateReplyModel, userId:
 
 
 export const removeOldThreads = async () => {
-    const timestamp = Date.now() - 1000 * 60 * 60 * 24; // 24 hours ago
-    console.log("Removing threads older than", new Date(timestamp));
+    const currentTimestamp = Date.now();
+    const timestamp = currentTimestamp - 1000 * 60 * 60 * 24; // 24 hours ago
     const collection = await getThreadCollection();
     const replyCollection = await getReplyCollection();
     let deletedIds: string[] = []
     const threads = await collection.find({ timestamp: { $lt: timestamp } }).toArray();
+    let highestId = threads.reduce((prev, curr) => parseInt(curr.id) > prev ? parseInt(curr.id) : prev, 0);
     deletedIds.push(...threads.map(t => t.id));
     for (let thread of threads) {
-        deletedIds.push(...await replyCollection.find({ threadId: thread.id }).toArray().then(replies => replies.map(r => r.id)));
+        let replies = await replyCollection.find({ threadId: thread.id }).toArray()
+        highestId = replies.reduce((prev, curr) => parseInt(curr.id) > prev ? parseInt(curr.id) : prev, highestId);
+        deletedIds.push(...replies.map(r => r.id));
         await replyCollection.deleteMany({ threadId: thread.id });
     }
     await collection.deleteMany({ timestamp: { $lt: timestamp } });
     const imageCollection = await getImageCollection();
-    const images = await imageCollection.updateMany({ associatedElement: { $in: deletedIds } }, { $set: { associatedElement: "" } });
-    removeHangingImages();
+    await imageCollection.updateMany({ associatedElement: { $in: deletedIds } }, { $set: { associatedElement: "" } });
+    const utils = await getUtilsCollection();
+
+    let current = await utils.findOne({ id: "current" })
+    utils.updateOne({ id: "lastUpdated" }, { $set: { value: currentTimestamp.toString() } }, { upsert: true });
+    utils.updateOne({ id: "hash" }, { $set: { value: await getCurrentHash(currentTimestamp) } }, { upsert: true })
 }
 
 

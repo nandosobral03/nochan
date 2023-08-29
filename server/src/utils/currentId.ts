@@ -5,8 +5,8 @@ export const getCurrentId = async () => {
     const session = client.startSession();
     try {
         const db = await getDb();
-        const { numberField } = (await db.collection("utils").findOneAndUpdate({ id: "current" }, { $inc: { numberField: 1 } }, { session, upsert: true })).value ?? { numberField: 0 };
-        return numberField.toString();
+        const { value } = (await db.collection("utils").findOneAndUpdate({ id: "current" }, { $inc: { value: 1 } }, { session, upsert: true })).value ?? { value: 0 };
+        return value.toString();
     }
     catch (e) {
         console.log(e);

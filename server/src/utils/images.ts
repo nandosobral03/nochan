@@ -11,7 +11,6 @@ import fs from "node:fs";
 export const saveImage = async (file: Blob, id: string) => {
     const collection = await getImageCollection();
     const fileType = await fileTypeFromBlob(file);
-    console.log(fileType);
     if (!fileType) throw HTTPError(400, "Invalid file type");
     fs.mkdirSync(path.join(process.cwd(), "images"), { recursive: true });
     writeFileSync(path.join(process.cwd(), `images/${id}.${fileType.ext}`), Buffer.from(await file.arrayBuffer()));
@@ -20,13 +19,11 @@ export const saveImage = async (file: Blob, id: string) => {
 }
 
 export const removeHangingImages = async () => {
-    console.log("Removing hanging images");
     const timestamp = Date.now() - 1000 * 60 * 5;
     const collection = await getImageCollection();
     const images = await collection.find({ timestamp: { $lt: timestamp }, associatedElement: "" }).toArray();
     for (const image of images) {
         try {
-            console.log(`Removing ${image.path}`);
             unlinkSync(path.join(process.cwd(), image.path));
         } catch (e) {
             console.log(e);
