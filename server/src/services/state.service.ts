@@ -38,7 +38,7 @@ export const getAppHash = async () => {
     let lastUpdate = await utils.findOne({ id: "lastUpdated" });
     return {
         hash: hash!.value,
-        lowestId: lowest!.value,
-        lastUpdatedHash: lastUpdate!.value
+        lowestId: lowest?.value || "0",
+        lastUpdatedHash: lastUpdate?.value || Date.now()
     }
 }

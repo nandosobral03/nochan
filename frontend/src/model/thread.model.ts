@@ -1,8 +1,9 @@
 export type Thread = {
     id: string;
+    author: string;
     content: string;
     title: string;
-    imageUrl: string;
+    image?: ImageModel;
     timestamp: number;
     lastInteraction: number;
     userIsAuthor: boolean;
@@ -12,12 +13,20 @@ export type Thread = {
     replyCount: number;
 }
 
-export interface Reply {
+export type Reply = {
     id: string;
+    author: string;
     content: string;
     timestamp: number;
     userIsAuthor: boolean;
     taggedElementIds: string[];
     taggedByElementIds: string[];
-    imageUrl: string;
+    image?: ImageModel
+}
+
+export type ImageModel = {
+    id: string
+    url: string
+    dimensions: string
+    size: number
 }

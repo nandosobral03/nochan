@@ -1,4 +1,6 @@
+import Divider from "@/components/Divider";
 import Layout from "@/components/Layout";
+import ThreadPreview from "@/components/ThreadPreview";
 import { NoChanState } from "@/model/state.model";
 import { Thread } from "@/model/thread.model";
 import { GetServerSideProps } from "next";
@@ -15,8 +17,8 @@ export default function Home({
       {threads.map((thread) => {
         return (
           <div key={thread.id}>
-            <h1>{thread.id}</h1>
-            <p>{thread.content}</p>
+            <ThreadPreview thread={thread} />
+            <Divider />
           </div>
         );
       })}
@@ -27,10 +29,11 @@ export default function Home({
 export const getServerSideProps: GetServerSideProps<{
   state: NoChanState;
 }> = async () => {
-  const data = await fetch("http://127.0.0.1:3000/state/hash");
+  console.log(process.env.NEXT_PUBLIC_SERVER_URL);
+  const data = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/state/hash`);
 
   const threads = await fetch(
-    `http://127.0.0.1:3000/threads?page=0&pageSize=10&orderBy=timestamp&order=desc`
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/threads?page=0&pageSize=10&orderBy=timestamp&order=desc`
   );
   const state = (await data.json()) as NoChanState;
   const threadData = (await threads.json()) as {

@@ -8,12 +8,14 @@
   "dependencies": {
     "@elysiajs/cors": "^0.6.0",
     "@elysiajs/cron": "^0.6.0",
+    "@types/imagemin": "^8.0.1",
     "dotenv": "^16.3.1",
     "elysia": "latest",
     "file-type": "^18.5.0",
-    "imagemin": "^8.0.1",
+    "image-size": "^1.0.2",
     "mongodb": "^5.8.1",
-    "proquint": "^0.0.1"
+    "proquint": "^0.0.1",
+    "sharp": "^0.32.5"
   },
   "devDependencies": {
     "bun-types": "latest"

@@ -1,27 +1,27 @@
-import { CreateReplyModel, CreateThreadModel, ThreadModel, ReplyModel, GetThreadModel, GetReplyModel } from "../models/thread.model";
-import { getThreadCollection, getDb, getReplyCollection, getImageCollection, getUtilsCollection } from "../utils/db";
+import { CreateReplyModel, CreateThreadModel, ThreadModel, ReplyModel, GetThreadModel, GetReplyModel, GetImageModel } from "../models/thread.model";
+import { getThreadCollection, getReplyCollection, getImageCollection, getUtilsCollection } from "../utils/db";
 import { getCurrentId } from "../utils/currentId";
 import { HTTPError, MapToHTTPError } from "../utils/error";
 import { getCurrentHash } from "./state.service";
 import { SortBy, MySortDirection } from "../routes/threads.routes";
 
+
 export const createThread = async (t: CreateThreadModel, userId: string): Promise<string> => {
     try {
         const imageCollection = await getImageCollection();
-        let imageUrl = "";
+        const collection = await getThreadCollection();
         if (t.imageId) {
             const image = await imageCollection.findOne({ id: t.imageId, associatedElement: "" });
             if (!image) {
                 throw HTTPError(404, "Image not found");
             }
-            imageUrl = image.url;
         }
-        const collection = await getThreadCollection();
         const currentId = await getCurrentId();
         let timestamp = Date.now();
         const thread: ThreadModel = {
             ...t,
-            imageUrl,
+            author: t.author ?? "Anonymous",
+            imageId: t.imageId,
             userId: userId,
             id: currentId,
             timestamp,
@@ -62,16 +62,18 @@ export const addTaggedElementId = async (taggerId: string, taggedElements: strin
     }
 }
 
-const createGetThreadModel = (thread: ThreadModel, replies: ReplyModel[], userId?: string): GetThreadModel => {
+const createGetThreadModel = async (thread: ThreadModel, replies: ReplyModel[], userId?: string): Promise<GetThreadModel> => {
+
     const response: GetThreadModel = {
         id: thread.id,
+        author: thread.author,
         content: thread.content,
         title: thread.title,
-        imageUrl: thread.imageUrl,
+        image: await createGetImageModel(thread.imageId),
         timestamp: thread.timestamp,
         lastInteraction: thread.lastInteraction,
         userIsAuthor: userId !== undefined && userId === thread.userId,
-        replies: replies.map(r => createGetRepliesModel(r, userId)),
+        replies: await Promise.all(replies.map(r => createGetRepliesModel(r, userId))),
         taggedElementIds: thread.taggedElementIds,
         taggedByElementIds: thread.taggedByElementIds,
         replyCount: thread.replyCount
@@ -80,7 +82,7 @@ const createGetThreadModel = (thread: ThreadModel, replies: ReplyModel[], userId
 }
 
 
-const createGetRepliesModel = (reply: ReplyModel, userId?: string): GetReplyModel => {
+const createGetRepliesModel = async (reply: ReplyModel, userId?: string): Promise<GetReplyModel> => {
     const response: GetReplyModel = {
         id: reply.id,
         content: reply.content,
@@ -88,10 +90,27 @@ const createGetRepliesModel = (reply: ReplyModel, userId?: string): GetReplyMode
         userIsAuthor: userId !== undefined && userId === reply.userId,
         taggedElementIds: reply.taggedElementIds,
         taggedByElementIds: reply.taggedByElementIds,
-        imageUrl: reply.imageUrl
+        image: await createGetImageModel(reply.imageId)
     }
     return response;
 }
+
+const createGetImageModel = async (imageId?: string): Promise<GetImageModel | undefined> => {
+    if (!imageId) return undefined;
+    const imageCollection = await getImageCollection();
+    let image = await imageCollection.findOne({ id: imageId }, { projection: { _id: 0 } });
+    if (!image) {
+        return undefined;
+    }
+    const ret: GetImageModel = {
+        id: image.id,
+        dimensions: image.dimensions,
+        size: image.size,
+        url: image.url
+    }
+    return ret;
+}
+
 
 export const getThread = async (id: string, userId?: string): Promise<GetThreadModel> => {
     const collection = await getThreadCollection();
@@ -107,13 +126,11 @@ export const getThread = async (id: string, userId?: string): Promise<GetThreadM
 export const createReply = async (threadId: string, r: CreateReplyModel, userId: string): Promise<string> => {
     try {
         const imageCollection = await getImageCollection();
-        let imageUrl = "";
         if (r.imageId) {
             const image = await imageCollection.findOne({ id: r.imageId, associatedElement: "" });
             if (!image) {
                 throw HTTPError(404, "Image not found");
             }
-            imageUrl = image.url;
         }
         await getThread(threadId); // check if thread exists, method throws error if it doesn't
         const currentId = await getCurrentId();
@@ -121,8 +138,9 @@ export const createReply = async (threadId: string, r: CreateReplyModel, userId:
         const timestamp = Date.now();
         const reply: ReplyModel = {
             ...r,
+            author: r.author ?? "Anonymous",
             userId: userId,
-            imageUrl,
+            imageId: r.imageId,
             threadId,
             id: currentId,
             timestamp,
@@ -185,7 +203,7 @@ const getThreads = async (page: number, pageSize: number, orderBy: SortBy, order
     let threadsResponse: GetThreadModel[] = []
     for (let thread of threads) {
         let replies = await replyCollection.find({ threadId: thread.id }, { projection: { _id: 0 } }).sort({ timestamp: 1 }).limit(7).toArray();
-        threadsResponse.push(createGetThreadModel(thread, replies, userId));
+        threadsResponse.push(await createGetThreadModel(thread, replies, userId));
     }
     return {
         threads: threadsResponse,

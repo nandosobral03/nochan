@@ -34,7 +34,9 @@ export const getImageCollection = async (): Promise<Collection<{
     path: string,
     url: string,
     timestamp: number,
-    associatedElement: string
+    associatedElement: string,
+    dimensions: string,
+    size: number
 }>> => {
     const db = await getDb();
     return db.collection("images");
@@ -43,7 +45,8 @@ export const getImageCollection = async (): Promise<Collection<{
 export const getUtilsCollection = async (): Promise<Collection<{
     id: string,
     value: string
-    timestamp: number
+    timestamp: number,
+
 }>> => {
     const db = await getDb();
     return db.collection("utils");
