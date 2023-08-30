@@ -18,7 +18,6 @@ export enum SortBy {
     "lastInteraction"
 }
 
-
 export enum MySortDirection {
     "asc",
     "desc"
@@ -27,10 +26,10 @@ export enum MySortDirection {
 
 router.get("/", ({ query, headers }) => getThreads({ query, headers }), {
     query: t.Object({
-        page: t.String(),
-        pageSize: t.String(),
-        orderBy: t.String(),
-        order: t.String(),
+        page: t.Optional(t.String()),
+        pageSize: t.Optional(t.String()),
+        orderBy: t.Optional(t.String()),
+        order: t.Optional(t.String()),
     })
 })
 export default router;

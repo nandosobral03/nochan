@@ -45,9 +45,8 @@ export const getThread = async ({ params, headers }: { params: { threadId: strin
     return thread;
 }
 
-export const getThreads = async ({ query, headers }: { query: { page: string, pageSize: string, orderBy: string, order: string }, headers: Record<string, string | null> }): Promise<{ threads: GetThreadModel[], total: number }> => {
+export const getThreads = async ({ query, headers }: { query: Record<string, string>, headers: Record<string, string | null> }): Promise<{ threads: GetThreadModel[], total: number }> => {
     const userId = headers["user-id"] || undefined;
-    if (!query.page || !query.pageSize || !query.orderBy || !query.order) throw HTTPError(400, "Missing query parameters");
     if (!["asc", "desc"].includes(query.order)) throw HTTPError(400, "Invalid order parameter, possible values are asc, desc");
     if (!["timestamp", "replyCount", "lastInteraction"].includes(query.orderBy)) throw HTTPError(400, "Invalid orderBy parameter, possible values are timestamp, replyCount, lastInteraction");
     let page = 0;

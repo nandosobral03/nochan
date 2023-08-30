@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0f0411;
+  --primary: #d6ae75;
+  --primary-light: #e7ad5b;
+  --text: #f5f5f5;
+}
+
+html{
+  background-color: var(--background);
+  color: var(--primary-light);
+}
+
+.hoverable{
+  background-color: var(--primary);
+}
+
+.hoverable:hover{
+  background-color: var(--primary-light);
+}
