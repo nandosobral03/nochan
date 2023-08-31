@@ -7,6 +7,8 @@ import { useState } from "react";
 import Image from "next/image";
 import CompressedImage from "./CompressedImage";
 import ImageSwitcher from "./CompressedImage";
+import ThreadHeader from "./Thread/ThreadHeader";
+import ThreadContent from "./Thread/ThreadContent";
 export default function ThreadPreview({ thread }: { thread: Thread }) {
   const [expanded, setExpanded] = useState(true);
   const handleExpand = () => {
@@ -22,7 +24,7 @@ export default function ThreadPreview({ thread }: { thread: Thread }) {
 
   return (
     <div className="flex flex-col justify-center items-center w-full px-4">
-      <span className="flex w-full gap-4 h-8">
+      <span className="flex w-full gap-4 h-8" id={thread.id}>
         <motion.div
           animate={{ rotate: expanded ? 0 : 180 }}
           layout
@@ -32,7 +34,6 @@ export default function ThreadPreview({ thread }: { thread: Thread }) {
             <ChevronDownIcon />
           </button>
         </motion.div>
-
         {thread.image && <ImageHeader image={thread.image} />}
       </span>
       <AnimatePresence initial={false}>
@@ -49,25 +50,17 @@ export default function ThreadPreview({ thread }: { thread: Thread }) {
             transition={{ duration: 0.2, ease: [0.04, 0.62, 0.23, 0.98] }}
             className="block w-full"
           >
-            {thread.image && (
-              <ImageSwitcher
-                fullUrl={thread.image.url}
-                compressedUrl={getBlurDataUrl(thread.image.url)}
-                className="max-w-xs max-h-96"
-              />
-            )}
-            <div className="flex gap-2 float-left">
-              <span>{thread.title}</span>
-              <span>{thread.author}</span>
-              <span>
-                {new Date(thread.timestamp).toLocaleString("en-US", {
-                  dateStyle: "long",
-                  timeStyle: "short",
-                })}
-              </span>
-              <span>#{thread.id}</span>
-              <button> Reply </button>
-            </div>
+            <blockquote className="text-left">
+              {thread.image && (
+                <ImageSwitcher
+                  fullUrl={thread.image.url}
+                  compressedUrl={getBlurDataUrl(thread.image.url)}
+                  className="max-w-xs max-h-96 float-left mx-5 my-1"
+                />
+              )}
+              <ThreadHeader thread={thread} />
+              <ThreadContent thread={thread} />
+            </blockquote>
           </motion.section>
         )}
       </AnimatePresence>

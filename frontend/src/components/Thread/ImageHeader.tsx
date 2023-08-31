@@ -26,21 +26,31 @@ export default function ImageHeader({ image }: { image: ImageModel }) {
       {/* Reverse image searches */}
       <span className="flex gap-2">
         <a
+          className="hover:underline hover:text-lightAccent"
           target="_blank"
           href={`https://www.google.com/searchbyimage?sbisrc=nochan&image_url=${image.url}&safe=off`}
         >
           google
         </a>
         <a
+          className="hover:underline hover:text-lightAccent"
           target="_blank"
           href={`https://yandex.com/images/search?source=collections&url=${image.url}&rpt=imageview`}
         >
           yandex
         </a>
-        <a target="_blank" href={`https://iqdb.org/?url=${image.url}`}>
+        <a
+          className="hover:underline hover:text-lightAccent"
+          target="_blank"
+          href={`https://iqdb.org/?url=${image.url}`}
+        >
           iqdb
         </a>
-        <a target="_blank" href={`https://trace.moe/?auto&url=${image.url}`}>
+        <a
+          className="hover:underline hover:text-lightAccent"
+          target="_blank"
+          href={`https://trace.moe/?auto&url=${image.url}`}
+        >
           wait
         </a>
       </span>

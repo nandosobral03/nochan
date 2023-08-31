@@ -25,7 +25,7 @@ export default function Header({
           )}
         </span>
         <p>
-          Everything was created after {/* Long date of 24 hours ago */}
+          Everything you see was created after {/* Long date of 24 hours ago */}
           {new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleString("en-US", {
             dateStyle: "long",
             timeStyle: "short",

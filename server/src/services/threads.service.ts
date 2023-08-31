@@ -112,15 +112,21 @@ const createGetImageModel = async (imageId?: string): Promise<GetImageModel | un
 }
 
 
-export const getThread = async (id: string, userId?: string): Promise<GetThreadModel> => {
+export const getThread = async (id: string, userId?: string): Promise<GetThreadModel | { redirectTo: string }> => {
     const collection = await getThreadCollection();
     const replyCollection = await getReplyCollection();
     let thread = await collection.findOne({ id }, { projection: { _id: 0 } });
     if (!thread) {
-        throw HTTPError(404, "Thread not found");
+        const reply = await replyCollection.findOne({ id }, { projection: { _id: 0 } })
+        if (!reply) {
+            throw HTTPError(404, "Thread not found");
+        }
+        const actualThreadId = reply.threadId;
+        return { redirectTo: actualThreadId };
+
     }
     let replies = await replyCollection.find({ threadId: id }, { projection: { _id: 0 } }).toArray();
-    return createGetThreadModel(thread, replies, userId);
+    return await createGetThreadModel(thread, replies, userId)
 }
 
 export const createReply = async (threadId: string, r: CreateReplyModel, userId: string): Promise<string> => {

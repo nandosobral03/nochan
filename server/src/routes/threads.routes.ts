@@ -10,7 +10,7 @@ router.post("/", ({ body, headers }) => createThread({ body, headers }), {
 router.post("/:threadId", ({ body, headers, params }) => createReply({ body, headers, params }), {
     body: CreateReplyModelDTO
 })
-router.get("/:threadId", ({ params, headers }) => getThread({ params, headers }))
+router.get("/:threadId", ({ params, headers, set }) => getThread({ params, headers, set }))
 
 export enum SortBy {
     "timestamp",

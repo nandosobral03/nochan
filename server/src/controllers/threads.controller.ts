@@ -39,10 +39,17 @@ export const createReply = async ({ body, headers, params }: { body: CreateReply
     }
 }
 
-export const getThread = async ({ params, headers }: { params: { threadId: string }, headers: Record<string, string | null> }): Promise<GetThreadModel> => {
+export const getThread = async ({ params, headers, set }: { params: { threadId: string }, headers: Record<string, string | null>, set: any }): Promise<GetThreadModel> => {
     const userId = headers["user-id"] || undefined;
-    const thread = await threadsService.getThread(params.threadId, userId);
-    return thread;
+    const response = await threadsService.getThread(params.threadId, userId) as any;
+    if (response.redirectTo) {
+        set.status = 302;
+        set.headers = { Location: "/threads/" + response.redirectTo };
+        set.redirect = "/threads/" + response.redirectTo;
+        return undefined!
+    } else {
+        return response
+    }
 }
 
 export const getThreads = async ({ query, headers }: { query: Record<string, string>, headers: Record<string, string | null> }): Promise<{ threads: GetThreadModel[], total: number }> => {
