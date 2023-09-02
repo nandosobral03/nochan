@@ -1,4 +1,5 @@
 import { Thread } from "@/model/thread.model";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function ThreadHeader({ thread }: { thread: Thread }) {
@@ -18,7 +19,7 @@ export default function ThreadHeader({ thread }: { thread: Thread }) {
   }, []);
 
   return (
-    <div className="flex gap-2 float-left ml-2">
+    <div className="flex gap-2 float-left ml-2 ">
       <span className="font-bold text-darkAccent">{thread.title}</span>
       <span className="font-bold text-user">{thread.author}</span>
       <span
@@ -29,12 +30,14 @@ export default function ThreadHeader({ thread }: { thread: Thread }) {
           timeStyle: "short",
         })}
       </span>
-      <button className="hover:underline hover:text-lightAccent">
+      <Link
+        className="hover:underline hover:text-lightAccent"
+        href={`/thread/${thread.id}`}
+      >
         #{thread.id}
-      </button>
+      </Link>
       <button className="hover:underline hover:text-lightAccent">
-        {" "}
-        [Reply]{" "}
+        [Reply]
       </button>
     </div>
   );

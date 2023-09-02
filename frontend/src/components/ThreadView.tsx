@@ -4,12 +4,13 @@ import { ChevronDownIcon } from "@radix-ui/react-icons";
 import { AnimatePresence, motion, useMotionValue } from "framer-motion";
 
 import { useState } from "react";
+import Image from "next/image";
 import CompressedImage from "./CompressedImage";
 import ImageSwitcher from "./CompressedImage";
 import ThreadHeader from "./Thread/ThreadHeader";
 import ThreadContent from "./Thread/ThreadContent";
 import { getBlurDataUrl } from "@/utils/utils";
-export default function ThreadPreview({ thread }: { thread: Thread }) {
+export default function ThreadView({ thread }: { thread: Thread }) {
   const [expanded, setExpanded] = useState(true);
   const handleExpand = () => {
     setExpanded(!expanded);

@@ -86,6 +86,7 @@ const createGetRepliesModel = async (reply: ReplyModel, userId?: string): Promis
     const response: GetReplyModel = {
         id: reply.id,
         content: reply.content,
+        author: reply.author,
         timestamp: reply.timestamp,
         userIsAuthor: userId !== undefined && userId === reply.userId,
         taggedElementIds: reply.taggedElementIds,

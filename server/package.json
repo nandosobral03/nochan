@@ -8,6 +8,7 @@
   "dependencies": {
     "@elysiajs/cors": "^0.6.0",
     "@elysiajs/cron": "^0.6.0",
+    "@types/axios": "^0.14.0",
     "@types/imagemin": "^8.0.1",
     "dotenv": "^16.3.1",
     "elysia": "latest",

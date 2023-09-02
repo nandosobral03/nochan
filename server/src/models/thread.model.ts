@@ -7,6 +7,7 @@ export const CreateThreadModelDTO = t.Object({
     content: t.String(),
     taggedElementIds: t.Optional(t.Array(t.String())),
     imageId: t.Optional(t.String()),
+    captchaToken: t.String()
 })
 export type CreateThreadModel = Static<typeof CreateThreadModelDTO>
 
@@ -15,6 +16,7 @@ export const CreateReplyModelDTO = t.Object({
     author: t.Optional(t.String()),
     imageId: t.Optional(t.String()),
     taggedElementIds: t.Optional(t.Array(t.String())),
+    captchaToken: t.String()
 })
 export type CreateReplyModel = Static<typeof CreateReplyModelDTO>
 
@@ -39,6 +41,7 @@ export type GetThreadModel = {
 export type GetReplyModel = {
     id: string
     content: string
+    author: string
     image?: GetImageModel
     timestamp: number
     userIsAuthor: boolean

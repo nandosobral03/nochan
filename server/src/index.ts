@@ -7,7 +7,7 @@ import { removeOldThreads } from "./services/threads.service";
 import { removeHangingImages } from "./utils/images";
 import { uploadImageToServer } from "./controllers/threads.controller";
 import path from "path";
-
+import { validateCaptcha } from "./utils/captcha";
 const dotenv = require('dotenv');
 dotenv.config();
 const app = new Elysia()
@@ -30,7 +30,6 @@ app.use(cron({
     removeOldThreads().then(() => removeHangingImages());
   }
 }))
-
 
 // print all environment variables
 console.log(

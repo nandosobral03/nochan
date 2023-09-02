@@ -15,9 +15,14 @@ export default function ImageHeader({ image }: { image: ImageModel }) {
   return (
     <span className="flex gap-2">
       <a href={image.url} target="_blank">
-        {image.url.split("/").pop()}
+        {image.url.split("/").pop()!.substring(0, 4) +
+          "..." +
+          image.url
+            .split("/")
+            .pop()
+            ?.substring(image.url.split("/").pop()!.length - 8)}
       </a>
-      <button className="p-2">
+      <button>
         <PinBottomIcon />
       </button>
       <span>

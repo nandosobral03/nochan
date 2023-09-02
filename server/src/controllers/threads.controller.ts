@@ -4,6 +4,7 @@ import threadsService from "../services/threads.service"
 import { saveImage } from "../utils/images"
 import { MySortDirection, SortBy } from "../routes/threads.routes";
 import { HTTPError } from "../utils/error";
+import { validateCaptcha } from "../utils/captcha";
 
 const generateUserId = (): string => {
     var id: Buffer = Buffer.from(crypto.getRandomValues(new Uint8Array(4)));
@@ -12,30 +13,36 @@ const generateUserId = (): string => {
 }
 
 
-export const createThread = async ({ body, headers }: { body: CreateThreadModel, headers: Record<string, string | null> }): Promise<{ threadId: string }> => {
+export const createThread = async ({ body, headers }: { body: CreateThreadModel, headers: Record<string, string | null> }): Promise<{ threadId: string, userId: string }> => {
+    const result = await validateCaptcha(body.captchaToken);
+    if (!result || !result.success) throw HTTPError(400, "Invalid captcha token");
     const userId = headers["user-id"] ?? generateUserId()
     const id = await threadsService.createThread(body, userId);
     return {
-        threadId: id
+        threadId: id,
+        userId
     }
 }
 
-export const uploadImageToServer = async (file: Blob): Promise<{ imageUrl: string }> => {
+export const uploadImageToServer = async (file: Blob): Promise<{ imageId: string }> => {
     let fileContents = await file.text();
     const hasher = new Bun.CryptoHasher("sha256");
     hasher.update(fileContents);
     hasher.update(Date.now().toString());
     const hash = hasher.digest("hex");
-    const imageUrl = await saveImage(file, hash);
-    return { imageUrl };
+    const imageId = await saveImage(file, hash);
+    return { imageId };
 }
 
 
-export const createReply = async ({ body, headers, params }: { body: CreateReplyModel, headers: Record<string, string | null>, params: { threadId: string } }): Promise<{ replyId: string }> => {
+export const createReply = async ({ body, headers, params }: { body: CreateReplyModel, headers: Record<string, string | null>, params: { threadId: string } }): Promise<{ replyId: string, userId: string }> => {
     const userId = headers["user-id"] ?? generateUserId()
+    const result = await validateCaptcha(body.captchaToken);
+    if (!result || !result.success) throw HTTPError(400, "Invalid captcha token");
     const id = await threadsService.createReply(params.threadId, body, userId);
     return {
-        replyId: id
+        replyId: id,
+        userId
     }
 }
 

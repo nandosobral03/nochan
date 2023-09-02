@@ -30,3 +30,12 @@ export type ImageModel = {
     dimensions: string
     size: number
 }
+
+export type CreateThreadRequestModel = {
+    title: string,
+    author?: string,
+    content: string,
+    taggedElementIds: string[],
+    imageId?: string,
+    captchaToken: string
+}

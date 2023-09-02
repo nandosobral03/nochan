@@ -50,16 +50,18 @@ export const saveImage = async (file: Blob, id: string) => {
 }
 
 export const removeHangingImages = async () => {
-    const timestamp = Date.now() - 1000 * 60 * 5;
+    const timestamp = Date.now() - 1000 * 60 * 0;
     const collection = await getImageCollection();
     const images = await collection.find({ timestamp: { $lt: timestamp }, associatedElement: "" }).toArray();
     for (const image of images) {
         try {
             unlinkSync(path.join(process.cwd(), image.path));
+            unlinkSync(path.join(process.cwd(), image.path.replace(/\.[^/.]+$/, "-compressed.png")));
+            collection.deleteMany({ timestamp: { $lt: timestamp }, associatedElement: "" });
+
         } catch (e) {
             console.log(e);
         }
     }
-    collection.deleteMany({ timestamp: { $lt: timestamp }, associatedElement: "" });
 }
 

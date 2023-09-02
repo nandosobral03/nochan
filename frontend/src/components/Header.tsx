@@ -1,5 +1,7 @@
 import { NoChanState } from "@/model/state.model";
+import { useModalStore } from "@/utils/store";
 import { useState } from "react";
+import CreateThreadModal from "./CreateThreadModal";
 
 export default function Header({
   state,
@@ -9,6 +11,10 @@ export default function Header({
   threadId?: string;
 }) {
   const [showHash, setShowHash] = useState(false);
+  const { setModal } = useModalStore();
+  const handleCreate = () => {
+    setModal(<CreateThreadModal />);
+  };
 
   return (
     <>
@@ -25,7 +31,7 @@ export default function Header({
           )}
         </span>
         <p>
-          Everything you see was created after {/* Long date of 24 hours ago */}
+          Everything you see was created after
           {new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleString("en-US", {
             dateStyle: "long",
             timeStyle: "short",
@@ -34,11 +40,14 @@ export default function Header({
       </header>
       <div className="flex flex-col justify-center items-center h-32 w-full px-4">
         <h1 className="text-4xl">/nc/ - NoChan</h1>
-        <button className="py-2 px-4 rounded mt-4 hoverable text-white">
+        <button
+          className="py-2 px-4 rounded mt-4 hoverable text-white"
+          onClick={handleCreate}
+        >
           {!threadId ? (
             <span> Start a thread</span>
           ) : (
-            <span>Reply to {threadId}</span>
+            <span>Reply to thread</span>
           )}
         </button>
       </div>
