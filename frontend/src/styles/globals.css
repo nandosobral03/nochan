@@ -9,11 +9,18 @@
   --text: #51300c;
 }
 
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 html{
   background-color: var(--background);
   color: var(--text);
+  overflow-x: hidden;
 }
+
 
 .hoverable{
   background-color: var(--primary);
@@ -21,5 +28,13 @@ html{
 
 .hoverable:hover{
   background-color: var(--primary-light);
+}
+
+.hoverable-danger{
+  background-color: #e63946;
+}
+
+.hoverable-danger:hover{
+  background-color: #f1a9a0;
 }
 

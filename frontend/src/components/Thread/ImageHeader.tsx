@@ -1,5 +1,4 @@
 import { ImageModel } from "@/model/thread.model";
-import { PinBottomIcon } from "@radix-ui/react-icons";
 
 export default function ImageHeader({ image }: { image: ImageModel }) {
   const getSize = (size: number) => {
@@ -22,14 +21,13 @@ export default function ImageHeader({ image }: { image: ImageModel }) {
             .pop()
             ?.substring(image.url.split("/").pop()!.length - 8)}
       </a>
-      <button>
-        <PinBottomIcon />
-      </button>
-      <span>
+      <span className="hidden md:inline">
         ({getSize(image.size)}, {image.dimensions})
       </span>
+      <span className="inline md:hidden">({getSize(image.size)})</span>
+
       {/* Reverse image searches */}
-      <span className="flex gap-2">
+      <span className="gap-2 hidden md:flex">
         <a
           className="hover:underline hover:text-lightAccent"
           target="_blank"

@@ -14,7 +14,37 @@ const handleTag = (tag: string, content: string) => {
   }
 };
 
-const parseLine = (line: string, outerMost = false) => {
+const linkOrPlainText = (content: string): JSX.Element => {
+  let parts = content.split(" ");
+  let ret: JSX.Element[] = [];
+  for (let part of parts) {
+    if (part.startsWith("http://") || part.startsWith("https://")) {
+      ret.push(
+        <a
+          className="hover:underline hover:text-lightAccent"
+          href={part}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {part}
+        </a>
+      );
+    } else {
+      ret.push(<>{part}</>);
+    }
+  }
+  return (
+    <>
+      {ret.reduce((prev, curr) => (
+        <>
+          {prev} {curr}
+        </>
+      ))}
+    </>
+  );
+};
+
+const parseLine = (line: string, outerMost = false, yous?: string[]) => {
   const parts: JSX.Element[] = [];
   const tagged: string[] = [];
   let currentString = "";
@@ -38,7 +68,9 @@ const parseLine = (line: string, outerMost = false) => {
             className="hover:underline hover:text-lightAccent"
             href={`/thread/${id}`}
           >
-            {`>>${id.padStart(8, "0")}`}
+            {yous?.includes(id)
+              ? `>>${id.padStart(8, "0")} (You)`
+              : `>>${id.padStart(8, "0")}`}
           </a>
         );
         i = next;
@@ -49,7 +81,7 @@ const parseLine = (line: string, outerMost = false) => {
 
     if (tags.includes(line[i])) {
       if (currentString.trim().length > 0) {
-        parts.push(<>{currentString}</>);
+        parts.push(linkOrPlainText(currentString));
         currentString = "";
       }
       let currentTag = line[i];
@@ -74,7 +106,7 @@ const parseLine = (line: string, outerMost = false) => {
     }
   }
   if (currentString.trim().length > 0) {
-    parts.push(<>{currentString}</>);
+    parts.push(linkOrPlainText(currentString));
   }
   return {
     element: <> {parts.map((part) => part)} </>,
@@ -82,7 +114,7 @@ const parseLine = (line: string, outerMost = false) => {
   };
 };
 
-export const parseContent = (content: string) => {
+export const parseContent = (content: string, yous?: string[]) => {
   const lines = content.split("\n");
   const result = [];
   const allTagged = [];
@@ -93,7 +125,7 @@ export const parseContent = (content: string) => {
       const { element } = parseLine(line);
       result.push(<span className="text-greentext"> {element} </span>);
     } else {
-      const { element, tagged } = parseLine(line, true);
+      const { element, tagged } = parseLine(line, true, yous);
       allTagged.push(...tagged);
       result.push(element);
     }
@@ -101,7 +133,7 @@ export const parseContent = (content: string) => {
 
   return {
     element: (
-      <div className="mx-4 my-4">
+      <div className="mx-4 my-4 break-words">
         {result.map((line) => (
           <>
             {line} <br />

@@ -21,6 +21,16 @@ const config: Config = {
       maxWidth: {
         'xxs': '8rem',
       },
+      minWidth: {
+        'xxs': '8rem',
+        'xs': '12rem',
+        'sm': '16rem',
+        'md': '20rem',
+        'lg': '24rem',
+        'xl': '28rem',
+        'screen-1/2': '50vw',
+        'screen': '100vw',
+      },
       height: {
         '128': '32rem',
         '144': '36rem',
@@ -33,7 +43,8 @@ const config: Config = {
         '144': '36rem',
         '160': '40rem',
         '176': '44rem',
-        '192': '48rem'
+        '192': '48rem',
+
       },
     }
   },

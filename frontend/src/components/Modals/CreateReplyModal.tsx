@@ -1,17 +1,26 @@
 import ReCAPTCHA from "react-google-recaptcha";
 import { useEffect, useRef, useState } from "react";
-import { CreateThreadRequestModel } from "@/model/thread.model";
+import { CreateReplyRequestModel } from "@/model/reply.model";
 import axios from "axios";
 import { parseContent, uploadImage } from "@/utils/utils";
-import { useLoadingStore } from "@/utils/store";
+import { useLoadingStore, useModalStore } from "@/utils/store";
+import { useRouter } from "next/router";
+import { getCookie, setCookie } from "cookies-next";
 declare global {
   interface Window {
     grecaptcha: any;
   }
 }
 
-export default function CreateThreadModal() {
-  const [title, setTitle] = useState("");
+export default function CreateReplyModal({
+  threadId,
+  id,
+}: {
+  threadId: string;
+  id?: string;
+}) {
+  const { clearModal } = useModalStore();
+  const router = useRouter();
   const [authorName, setAuthorName] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -25,10 +34,19 @@ export default function CreateThreadModal() {
   };
 
   useEffect(() => {
-    console.log(captcha);
-  }, [captcha]);
+    if (id) setContent((content) => content + `>>${id}\n`);
 
-  const handleCreateThread = async () => {
+    document.addEventListener("idClicked", (e) => {
+      const { threadId, id } = (e as CustomEvent).detail;
+      setContent((content) => content + `>>${id}\n`);
+    });
+
+    return () => {
+      document.removeEventListener("idClicked", () => {});
+    };
+  }, []);
+
+  const handleCreateReply = async () => {
     setLoading(true);
     let imageId;
 
@@ -36,8 +54,7 @@ export default function CreateThreadModal() {
       imageId = await uploadImage(image);
     }
     let { tagged } = parseContent(content);
-    const request: CreateThreadRequestModel = {
-      title,
+    const request: CreateReplyRequestModel = {
       author: authorName.trim().length > 0 ? authorName : undefined,
       content,
       taggedElementIds: tagged,
@@ -45,26 +62,24 @@ export default function CreateThreadModal() {
       captchaToken: captcha,
     };
 
+    const userIdCookie = getCookie("userId");
     const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/threads`,
-      request
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/threads/${threadId}/`,
+      request,
+      { headers: { "user-id": userIdCookie } }
     );
+    const { replyId, userId } = res.data;
     setLoading(false);
     if (res.status == 200) {
-      window.location.reload();
+      setCookie("userId", userId);
+      clearModal();
+      router.push(`/thread/${threadId}`);
     }
   };
 
   return (
     <>
       <div className="flex flex-col w-full h-full p-4">
-        <input
-          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-100"
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
         <input
           className="w-full px-4 py-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gray-100"
           type="text"
@@ -105,8 +120,9 @@ export default function CreateThreadModal() {
           />
         </div>
         <button
-          className="w-full p-4 text-white font-bold rounded hoverable"
-          onClick={handleCreateThread}
+          className="w-full p-4 text-white font-bold rounded hoverable disabled:opacity-50"
+          onClick={handleCreateReply}
+          disabled={captcha.length == 0 || content.length == 0}
         >
           Submit
         </button>

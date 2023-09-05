@@ -3,6 +3,7 @@ import Layout from "@/components/Layout";
 import ThreadView from "@/components/ThreadView";
 import { NoChanState } from "@/model/state.model";
 import { Thread } from "@/model/thread.model";
+import { getCookie } from "cookies-next";
 import { GetServerSideProps } from "next";
 
 export default function ThreadPage({
@@ -25,18 +26,23 @@ export const getServerSideProps: GetServerSideProps<{
   thread: Thread;
 }> = async (context) => {
   const data = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/state/hash`);
+  const userIdCookie = getCookie("userId", context);
+  const headers: Record<string, string> = {};
+  if (userIdCookie) headers["user-id"] = userIdCookie;
   const slug = context.params!.slug;
   try {
     const thread = await fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL}/threads/${slug}`
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/threads/${slug}`,
+      { headers }
     );
-    console.log(thread);
+    console.log(userIdCookie);
     const state = (await data.json()) as NoChanState;
     const threadData = (await thread.json()) as Thread;
+    console.log(threadData);
     if (threadData.id !== slug)
       return {
         redirect: {
-          destination: `/thread/${threadData.id}`,
+          destination: `/thread/${threadData.id}#${slug}`,
           permanent: true,
         },
       };

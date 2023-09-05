@@ -1,4 +1,4 @@
-import { CreateReplyModel, CreateThreadModel, ThreadModel, ReplyModel, GetThreadModel, GetReplyModel, GetImageModel } from "../models/thread.model";
+import { CreateReplyModel, CreateThreadModel, ThreadModel, ReplyModel, GetThreadModel, GetReplyModel, GetImageModel, GetThreadPreviewModel } from "../models/thread.model";
 import { getThreadCollection, getReplyCollection, getImageCollection, getUtilsCollection } from "../utils/db";
 import { getCurrentId } from "../utils/currentId";
 import { HTTPError, MapToHTTPError } from "../utils/error";
@@ -63,7 +63,6 @@ export const addTaggedElementId = async (taggerId: string, taggedElements: strin
 }
 
 const createGetThreadModel = async (thread: ThreadModel, replies: ReplyModel[], userId?: string): Promise<GetThreadModel> => {
-
     const response: GetThreadModel = {
         id: thread.id,
         author: thread.author,
@@ -74,11 +73,33 @@ const createGetThreadModel = async (thread: ThreadModel, replies: ReplyModel[], 
         lastInteraction: thread.lastInteraction,
         userIsAuthor: userId !== undefined && userId === thread.userId,
         replies: await Promise.all(replies.map(r => createGetRepliesModel(r, userId))),
-        taggedElementIds: thread.taggedElementIds,
+        taggedElementIds: userId !== undefined ? await getTaggedElementIds(thread.taggedElementIds, userId) : thread.taggedElementIds.map(id => ({ id })),
         taggedByElementIds: thread.taggedByElementIds,
         replyCount: thread.replyCount
     }
     return response;
+}
+
+
+const getTaggedElementIds = async (taggedElementIds: string[], userId?: string): Promise<{ id: string, userIsAuthor?: true }[]> => {
+    let replyCollection = await getReplyCollection();
+    let threadCollection = await getThreadCollection();
+
+    let replies = await replyCollection.find({ id: { $in: taggedElementIds }, userId: userId }).toArray();
+    let threads = await threadCollection.find({ id: { $in: taggedElementIds }, userId: userId }).toArray();
+
+
+    return taggedElementIds.map(id => {
+        if (replies.find(r => r.id === id)) {
+            return { id, userIsAuthor: true }
+        }
+        else if (threads.find(t => t.id === id)) {
+            return { id, userIsAuthor: true }
+        }
+        else {
+            return { id }
+        }
+    })
 }
 
 
@@ -89,7 +110,7 @@ const createGetRepliesModel = async (reply: ReplyModel, userId?: string): Promis
         author: reply.author,
         timestamp: reply.timestamp,
         userIsAuthor: userId !== undefined && userId === reply.userId,
-        taggedElementIds: reply.taggedElementIds,
+        taggedElementIds: userId !== undefined ? await getTaggedElementIds(reply.taggedElementIds, userId) : reply.taggedElementIds.map(id => ({ id })),
         taggedByElementIds: reply.taggedByElementIds,
         image: await createGetImageModel(reply.imageId)
     }
@@ -188,7 +209,7 @@ export const removeOldThreads = async () => {
 }
 
 
-const getThreads = async (page: number, pageSize: number, orderBy: SortBy, order: MySortDirection, userId?: string): Promise<{ threads: GetThreadModel[], total: number }> => {
+const getThreads = async (page: number, pageSize: number, orderBy: SortBy, order: MySortDirection, userId?: string): Promise<{ threads: GetThreadPreviewModel[], total: number }> => {
     const collection = await getThreadCollection();
     const replyCollection = await getReplyCollection();
     let total = await collection.countDocuments();
@@ -207,10 +228,11 @@ const getThreads = async (page: number, pageSize: number, orderBy: SortBy, order
     }
     let threads = await collection.find(filter, { projection: { _id: 0 } }).sort(query).skip(page * pageSize).limit(pageSize).toArray();
     // Get the first 7 replies for each thread
-    let threadsResponse: GetThreadModel[] = []
+    let threadsResponse: GetThreadPreviewModel[] = []
     for (let thread of threads) {
-        let replies = await replyCollection.find({ threadId: thread.id }, { projection: { _id: 0 } }).sort({ timestamp: 1 }).limit(7).toArray();
-        threadsResponse.push(await createGetThreadModel(thread, replies, userId));
+        let replies = await replyCollection.find({ threadId: thread.id }, { projection: { _id: 0 } }).sort({ timestamp: 1 }).limit(4).toArray();
+        let totalReplies = await replyCollection.countDocuments({ threadId: thread.id });
+        threadsResponse.push({ ...await createGetThreadModel(thread, replies, userId), replyCount: totalReplies });
     }
     return {
         threads: threadsResponse,

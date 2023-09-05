@@ -3,7 +3,8 @@ import Layout from "@/components/Layout";
 import Pagination from "@/components/Pagination";
 import ThreadPreview from "@/components/ThreadPreview";
 import { NoChanState } from "@/model/state.model";
-import { Thread } from "@/model/thread.model";
+import { Thread, ThreadPreviewModel } from "@/model/thread.model";
+import { getCookie } from "cookies-next";
 import { GetServerSideProps } from "next";
 import { AppContext } from "next/app";
 import { useEffect, useState } from "react";
@@ -28,15 +29,26 @@ export default function Home({
 
   return (
     <Layout state={state}>
-      {threads.map((thread) => {
-        return (
-          <div key={thread.id}>
-            <ThreadPreview thread={thread} />
-            <Divider />
-          </div>
-        );
-      })}
-      <Divider />
+      <div className="w-full flex-grow flex flex-col justify-center items-center gap-3">
+        {threads.length > 0 ? (
+          threads.map((thread) => {
+            return (
+              <div key={thread.id} className="w-full">
+                <ThreadPreview thread={thread} />
+                <Divider />
+              </div>
+            );
+          })
+        ) : (
+          <>
+            <img src="/empty.png" className="w-1/2" />
+            <div className="flex flex-col gap-2 items-center bg-primaryLight py-6 px-12 rounded-lg">
+              <h1 className="text-2xl">No threads found</h1>
+              <h3 className="text-xl">404 as they say</h3>
+            </div>
+          </>
+        )}
+      </div>
       <Pagination
         currentPage={+page}
         totalPages={Math.ceil(totalThreads / 10)}
@@ -51,15 +63,29 @@ export const getServerSideProps: GetServerSideProps<{
   const data = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/state/hash`);
   const query = context.query;
   const page = query.page ? +query.page : 1;
+  const userIdCookie = getCookie("userId", context);
+  const headers: Record<string, string> = {};
 
+  if (page <= 0) {
+    console.log("redirecting");
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  if (userIdCookie) headers["user-id"] = userIdCookie;
   const threads = await fetch(
     `${process.env.NEXT_PUBLIC_SERVER_URL}/threads?page=${
       page - 1
-    }&pageSize=10&orderBy=timestamp&order=desc`
+    }&pageSize=10&orderBy=timestamp&order=desc`,
+    { headers }
   );
   const state = (await data.json()) as NoChanState;
   const threadData = (await threads.json()) as {
-    threads: Thread[];
+    threads: ThreadPreviewModel[];
     total: number;
   };
   return {

@@ -6,7 +6,7 @@ export const CreateThreadModelDTO = t.Object({
     author: t.Optional(t.String()),
     content: t.String(),
     taggedElementIds: t.Optional(t.Array(t.String())),
-    imageId: t.Optional(t.String()),
+    imageId: t.String(),
     captchaToken: t.String()
 })
 export type CreateThreadModel = Static<typeof CreateThreadModelDTO>
@@ -33,10 +33,12 @@ export type GetThreadModel = {
     lastInteraction: number
     userIsAuthor: boolean
     replies: GetReplyModel[]
-    taggedElementIds: string[]
+    taggedElementIds: { id: string, userIsAuthor?: true }[]
     taggedByElementIds: string[]
     replyCount: number
 }
+
+export type GetThreadPreviewModel = GetThreadModel & { replyCount: number }
 
 export type GetReplyModel = {
     id: string
@@ -45,7 +47,7 @@ export type GetReplyModel = {
     image?: GetImageModel
     timestamp: number
     userIsAuthor: boolean
-    taggedElementIds: string[]
+    taggedElementIds: { id: string, userIsAuthor?: true }[]
     taggedByElementIds: string[]
 }
 

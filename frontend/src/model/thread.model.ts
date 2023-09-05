@@ -8,10 +8,13 @@ export type Thread = {
     lastInteraction: number;
     userIsAuthor: boolean;
     replies: Reply[];
-    taggedElementIds: string[];
+    taggedElementIds: { id: string, userIsAuthor?: true }[],
     taggedByElementIds: string[];
     replyCount: number;
 }
+
+export type ThreadPreviewModel = Thread & { replyCount: number }
+
 
 export type Reply = {
     id: string;
@@ -19,7 +22,7 @@ export type Reply = {
     content: string;
     timestamp: number;
     userIsAuthor: boolean;
-    taggedElementIds: string[];
+    taggedElementIds: { id: string, userIsAuthor?: true }[],
     taggedByElementIds: string[];
     image?: ImageModel
 }
