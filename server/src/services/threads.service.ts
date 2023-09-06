@@ -4,6 +4,7 @@ import { getCurrentId } from "../utils/currentId";
 import { HTTPError, MapToHTTPError } from "../utils/error";
 import { getCurrentHash } from "./state.service";
 import { SortBy, MySortDirection } from "../routes/threads.routes";
+import { uploadImageToServer } from "../controllers/threads.controller";
 
 
 export const createThread = async (t: CreateThreadModel, userId: string): Promise<string> => {
@@ -238,6 +239,39 @@ const getThreads = async (page: number, pageSize: number, orderBy: SortBy, order
         threads: threadsResponse,
         total
     };
+}
+
+
+
+export const createDailyThread = async () => {
+    const prompts = (await Bun.file("prompts.txt").text()).split("\n");
+    const totalPrompts = prompts.length;
+    const promptNumber = Math.floor(Date.now() / 1000 / 60 / 60 / 24) % totalPrompts
+    const todaysPrompt = prompts[promptNumber];
+    let image = uploadImageToServer(Bun.file("daily_prompt.png"));
+
+    let content = `
+        Hey anons it's time for the daily prompt!, Today is ${new Date().toLocaleDateString()} and we will be using prompt #${promptNumber} out of ${totalPrompts} prompts.
+        Today's prompt is: 
+        "${todaysPrompt}"
+        You can use this thread to discuss the prompt, post your art, or just chat with other.
+
+        Have a nice day! :)
+        `
+
+
+
+    let thread: CreateThreadModel = {
+        title: "Today's prompt",
+        content,
+        imageId: (await image).imageId,
+        captchaToken: "",
+        author: "Daily Prompter"
+    }
+
+    const threadId = await createThread(thread, "daily_prompter");
+
+    return threadId;
 }
 
 

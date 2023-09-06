@@ -2,7 +2,7 @@ import { getBlurDataUrl, parseContent } from "@/utils/utils";
 import { useMemo, useState } from "react";
 import { Reply } from "@/model/thread.model";
 import ImageHeader from "../Thread/ImageHeader";
-import ImageSwitcher from "../CompressedImage";
+import ImageSwitcher from "../ImageSwitcher";
 import ReplyHeader from "./ReplyHeader";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
 import { AnimatePresence, motion } from "framer-motion";

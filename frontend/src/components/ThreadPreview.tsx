@@ -4,8 +4,8 @@ import { ChevronDownIcon } from "@radix-ui/react-icons";
 import { AnimatePresence, motion, useMotionValue } from "framer-motion";
 
 import { useState } from "react";
-import CompressedImage from "./CompressedImage";
-import ImageSwitcher from "./CompressedImage";
+import CompressedImage from "./ImageSwitcher";
+import ImageSwitcher from "./ImageSwitcher";
 import ThreadHeader from "./Thread/ThreadHeader";
 import ThreadContent from "./Thread/ThreadContent";
 import { getBlurDataUrl } from "@/utils/utils";

@@ -11,6 +11,7 @@ export const CreateThreadModelDTO = t.Object({
 })
 export type CreateThreadModel = Static<typeof CreateThreadModelDTO>
 
+
 export const CreateReplyModelDTO = t.Object({
     content: t.String(),
     author: t.Optional(t.String()),

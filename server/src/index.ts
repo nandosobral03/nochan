@@ -6,8 +6,8 @@ import stateRoutes from "./routes/state.routes";
 import { removeOldThreads } from "./services/threads.service";
 import { removeHangingImages } from "./utils/images";
 import { uploadImageToServer } from "./controllers/threads.controller";
+import { createDailyThread } from "./services/threads.service";
 import path from "path";
-import { validateCaptcha } from "./utils/captcha";
 const dotenv = require('dotenv');
 dotenv.config();
 const app = new Elysia()
@@ -30,6 +30,18 @@ app.use(cron({
     removeOldThreads().then(() => removeHangingImages());
   }
 }))
+
+app.use(cron({
+  name: 'daily prompt',
+  pattern: '0 0 * * *',
+  run() {
+    createDailyThread();
+  }
+}))
+
+
+createDailyThread();
+removeOldThreads().then(() => removeHangingImages());
 
 // print all environment variables
 console.log(

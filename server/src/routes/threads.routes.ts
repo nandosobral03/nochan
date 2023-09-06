@@ -32,4 +32,7 @@ router.get("/", ({ query, headers }) => getThreads({ query, headers }), {
         order: t.Optional(t.String()),
     })
 })
+
+
+
 export default router;
