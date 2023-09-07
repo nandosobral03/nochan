@@ -30,12 +30,12 @@ export default function Layout({ children, state, threadId }: LayoutProps) {
 
   return (
     <>
+      <Script src="https://www.google.com/recaptcha/enterprise.js?render=6LcoNfEnAAAAAHimi1dohLgmDKZQ0ADHTMroAqAP"></Script>
       <Head>
         <title>/nc/ - NoChan</title>
         <meta name="description" content="NoChan" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.png" />
-        <Script src="https://www.google.com/recaptcha/enterprise.js?render=6LcoNfEnAAAAAHimi1dohLgmDKZQ0ADHTMroAqAP"></Script>
       </Head>
       <div className="min-h-screen flex flex-col">
         <Header state={state} threadId={threadId} />

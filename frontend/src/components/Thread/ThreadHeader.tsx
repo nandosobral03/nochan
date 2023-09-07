@@ -24,7 +24,7 @@ export default function ThreadHeader({
       setTimeLeft(getTimeLeft(thread.timestamp));
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [thread.timestamp]);
 
   return (
     <div className="flex gap-2  ml-2 flex-wrap">

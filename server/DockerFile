@@ -1,0 +1,47 @@
+# Stage 1: Build the "bun" image
+FROM oven/bun AS bun
+
+# Add any additional "bun" configuration and installation steps here if needed
+
+# Stage 2: Create the final image with Node.js 18
+FROM node:18
+
+# Copy the "bun" binary from the previous stage
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+
+# Set up your Node.js application as needed
+WORKDIR /app
+
+# Update the package list and install any required dependencies
+RUN apt-get update
+RUN apt-get install
+
+# Set the PATH to include bun
+ENV PATH=${BUN_INSTALL}/bin:${PATH}
+
+# Copy your application files
+COPY ./src /app/src
+COPY ./package.json /app
+COPY ./prompts.txt /app
+COPY ./daily_prompt.png /app
+COPY ./tsconfig.json /app
+RUN mkdir /app/src/images
+# Set the working directory
+WORKDIR /app
+
+# Install Node.js dependencies
+RUN npm install sharp
+# Install your application's dependencies using bun
+RUN bun install
+
+# Expose the port
+EXPOSE 5020
+
+# Define the command to start your application
+
+# Add BUN_INSTALL to the PATH
+ENV PATH=${BUN_INSTALL}/bin:${PATH}
+
+
+CMD ["bun", "run", "/app/src/index.ts" ]
+

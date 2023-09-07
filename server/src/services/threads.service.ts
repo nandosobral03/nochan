@@ -5,7 +5,7 @@ import { HTTPError, MapToHTTPError } from "../utils/error";
 import { getCurrentHash } from "./state.service";
 import { SortBy, MySortDirection } from "../routes/threads.routes";
 import { uploadImageToServer } from "../controllers/threads.controller";
-
+import fs from "fs"
 
 export const createThread = async (t: CreateThreadModel, userId: string): Promise<string> => {
     try {
@@ -244,12 +244,11 @@ const getThreads = async (page: number, pageSize: number, orderBy: SortBy, order
 
 
 export const createDailyThread = async () => {
-    const prompts = (await Bun.file("prompts.txt").text()).split("\n");
+    let prompts = fs.readFileSync("./prompts.txt").toString().split("\n");
     const totalPrompts = prompts.length;
     const promptNumber = Math.floor(Date.now() / 1000 / 60 / 60 / 24) % totalPrompts
     const todaysPrompt = prompts[promptNumber];
-    let image = uploadImageToServer(Bun.file("daily_prompt.png"));
-
+    let image = await uploadImageToServer(new Blob([fs.readFileSync("./daily_prompt.png")], { type: "image/png" }));
     let content = `
         Hey anons it's time for the daily prompt!, Today is ${new Date().toLocaleDateString()} and we will be using prompt #${promptNumber} out of ${totalPrompts} prompts.
         Today's prompt is: 

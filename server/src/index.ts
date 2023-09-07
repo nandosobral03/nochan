@@ -39,10 +39,15 @@ app.use(cron({
   }
 }))
 
+console.log(process.env)
 
-createDailyThread();
-removeOldThreads().then(() => removeHangingImages());
-
+try {
+  createDailyThread();
+  removeOldThreads().then(() => removeHangingImages()).catch(console.log)
+}
+catch (e: any) {
+  console.log(e)
+}
 // print all environment variables
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

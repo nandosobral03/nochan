@@ -60,6 +60,8 @@ export default function Home({
 export const getServerSideProps: GetServerSideProps<{
   state: NoChanState;
 }> = async (context) => {
+  console.log("fetching data");
+  console.log(process.env.NEXT_PUBLIC_SERVER_URL);
   const data = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/state/hash`);
   const query = context.query;
   const page = query.page ? +query.page : 1;

@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  mongodb-container:
+    image: mongo
+    networks:
+      - my-network
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27018:27017"
+  nochan-api:
+    image: nochan-api
+    networks:
+      - my-network
+    ports:
+      - "5020:5020"
+    depends_on:
+      - mongodb-container
+    environment:
+      - MONGO_URL=mongodb://mongodb-container:27017
+      - PORT=5020
+      - SERVER_URL=https://nochan-api.aornum.xyz
+networks:
+  my-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:

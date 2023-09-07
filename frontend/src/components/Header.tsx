@@ -5,6 +5,7 @@ import CreateThreadModal from "./Modals/CreateThreadModal";
 import CreateReplyModal from "./Modals/CreateReplyModal";
 import { PersonIcon, UpdateIcon } from "@radix-ui/react-icons";
 import { deleteCookie } from "cookies-next";
+import Link from "next/link";
 export default function Header({
   state,
   threadId,
@@ -34,7 +35,7 @@ export default function Header({
           onMouseLeave={() => setShowHash(false)}
         >
           {showHash ? (
-            <a href="/"> {state.hash} </a>
+            <Link href="/"> {state.hash} </Link>
           ) : (
             <p>Hosting replies from #{state.lowestId}</p>
           )}
@@ -50,7 +51,7 @@ export default function Header({
       </header>
       <div className="flex flex-col justify-center items-center h-32 w-full px-4">
         <h1 className="text-4xl">
-          <a href="/">/nc/ - NoChan </a>
+          <Link href="/">/nc/ - NoChan </Link>
         </h1>
         <div className="flex mt-4 align-middle items-center gap-2">
           <button
